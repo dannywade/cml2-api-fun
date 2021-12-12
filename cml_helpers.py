@@ -42,9 +42,39 @@ def create_cml_auth_token(username: str, password: str) -> str:
 def get_cml_lab_ids(token: str) -> list:
     """
     Returns a list of lab IDs created in CML instance
+
+    args:
+    - token: str
     """
     headers = {"Authorization": "Bearer " + token}
     labs_endpoint = f"{CML_ROOT_API}/labs"
     response = requests.get(labs_endpoint, headers=headers, verify=False).json()
 
     return response
+
+
+def get_all_lab_details(token, labs: list) -> dict:
+    """
+    Returns a dict of each lab (using their lab ID as the key) and their associated details.
+
+    args:
+    - token: str
+    - labs: list
+    """
+
+    all_lab_details = {"available_labs": {}}
+
+    headers = {"Authorization": "Bearer " + token}
+    for lab_id in labs:
+        lab_details_endpoint = f"{CML_ROOT_API}/labs/{lab_id}"
+        response = requests.get(lab_details_endpoint, headers=headers, verify=False)
+        lab_details = response.json()
+
+        if response.status_code == 200:
+            lab_dict = {lab_id: lab_details}
+            all_lab_details["available_labs"].update(lab_dict)
+            logger.info("Lab details have been added.")
+        else:
+            logger.warning(f"Could not retrieve lab details from lab ID: {lab_id}")
+
+    return all_lab_details
